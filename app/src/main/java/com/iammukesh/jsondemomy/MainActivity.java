@@ -1,5 +1,6 @@
 package com.iammukesh.jsondemomy;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -10,12 +11,14 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,15 +28,18 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
-
+    TextView resulttext;
     public void checkWeather(View view){
         DownloadTemp downloader = new DownloadTemp();
         TextView city = (TextView)findViewById(R.id.cityName);
         String filterCity = city.getText().toString().replaceAll(" ", "");
+        InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        mgr.hideSoftInputFromWindow(city.getWindowToken(), 0);
        downloader.execute("http://api.openweathermap.org/data/2.5/weather?q=" + filterCity + "&appid=44db6a862fba0b067b1930da0d769e98");
     }
 
     public class DownloadTemp extends AsyncTask<String , Void , String>{
+
 
         @Override
         protected String doInBackground(String... urls) {
@@ -75,15 +81,26 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("Whether of City",weatherInfo);
                 JSONArray arr = new JSONArray(weatherInfo);
                 int i = 0;
+                String main="'";
+                String description="";
+                String message ="";
                 while (i < arr.length()){
                     JSONObject JSONpart = arr.getJSONObject(i);
-                    Log.i("main",JSONpart.getString("main"));
-                    Log.i("description",JSONpart.getString("description"));
+                    main = JSONpart.getString("main");
+                    description = JSONpart.getString("description");
+                    if(main !="" && description != ""){
+                        message +="Weather Report\n"+ main + " : " + description+"\r\n";
+                        resulttext.setText(message);
+                        Log.i("City",message);
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "City Not Found", Toast.LENGTH_SHORT).show();
+                    }
                     i++;
 
                 }
             } catch (JSONException e) {
-                Toast.makeText(getApplicationContext(),"Opps! Something Went Wrong with JSON",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),"Opps! Something Went Wrong with Weather App",Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
 
@@ -105,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
+         resulttext = (TextView)findViewById(R.id.textView2);
 
     }
 
